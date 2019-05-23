@@ -68,17 +68,16 @@ class CircleFinder:
 class ImageTransformer:
 
     def build_transformation_map(self, Ws, Hs, Wd, Hd, R1, R2, Cx, Cy):
-        map_x = np.zeros((Hd, Wd), np.float32)
-        map_y = np.zeros((Hd, Wd), np.float32)
-        for y in range(0, int(Hd - 1)):
-            for x in range(0, int(Wd - 1)):
-                r = (float(y) / float(Hd)) * (R2 - R1) + R1
-                theta = (float(x) / float(Wd)) * 2.0 * np.pi
-                xS = Cx + r * np.sin(theta)
-                yS = Cy + r * np.cos(theta)
-                map_x.itemset((y, x), int(xS))
-                map_y.itemset((y, x), int(yS))
-        return map_x, map_y
+        ys = np.arange(0, int(Hd)).astype(np.float32)
+        xs = np.arange(0, int(Wd)).astype(np.float32)
+
+        rs = (ys / Hd) * (R2 - R1) + R1
+        thetas = (xs / Wd) * 2.0 * np.pi
+
+        map_x = Cx + np.outer(rs, np.sin(thetas))
+        map_y = Cy + np.outer(rs, np.cos(thetas))
+
+        return np.round(map_x), np.round(map_y)
 
     def unwarp(self, img, xmap, ymap):
         output = cv2.remap(img, xmap, ymap, cv2.INTER_LINEAR)
